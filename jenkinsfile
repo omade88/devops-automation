@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Load AWS credentials from Jenkins credentials store
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // Jenkins credentials ID for AWS access key
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // Jenkins credentials ID for AWS secret key
-        GITHUB_TOKEN = credentials('github-token')  // Jenkins credentials ID for GitHub token
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // AWS Access Key from Jenkins credentials
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // AWS Secret Key from Jenkins credentials
+        GITHUB_TOKEN = credentials('github-token')  // GitHub token from Jenkins credentials
     }
 
     stages {
@@ -33,7 +32,7 @@ pipeline {
         stage('Ansible Provisioning') {
             steps {
                 dir('ansible') {
-                    // Ensure Ansible uses the correct SSH key and inventory file
+                    // Use the correct SSH key for Ansible provisioning
                     sh '''
                         ansible-playbook -i inventory playbook.yml \
                         --private-key ~/.ssh/eks-terraform-key.pem
@@ -45,7 +44,8 @@ pipeline {
 
     post {
         always {
-            // Cleanup or notification logic, if needed
+            // Tasks that should always run after pipeline execution
+            echo 'Pipeline completed. Performing cleanup if necessary.'
         }
     }
 }

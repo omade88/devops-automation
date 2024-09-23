@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id')  // AWS Access Key from Jenkins credentials
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')  // AWS Secret Key from Jenkins credentials
-        GITHUB_TOKEN = credentials('github-token')  // GitHub token from Jenkins credentials
+        // Use AWS credentials (ID that you've set for the AWS Credentials in Jenkins)
+        AWS_CREDENTIALS = credentials('aws-credentials-id')  // Jenkins credentials ID for AWS credentials
+        GITHUB_TOKEN = credentials('github-token')  // Jenkins credentials ID for GitHub token
     }
 
     stages {
@@ -18,13 +18,13 @@ pipeline {
         stage('Terraform Init and Apply') {
             steps {
                 dir('terraform') {
-                    // Initialize Terraform and apply configuration using AWS credentials
-                    sh '''
-                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        terraform init
-                        terraform apply -auto-approve
-                    '''
+                    // Use AWS credentials (Access Key and Secret Key) for Terraform
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        sh '''
+                            terraform init
+                            terraform apply -auto-approve
+                        '''
+                    }
                 }
             }
         }
@@ -32,7 +32,7 @@ pipeline {
         stage('Ansible Provisioning') {
             steps {
                 dir('ansible') {
-                    // Use the correct SSH key for Ansible provisioning
+                    // Ensure Ansible uses the correct SSH key and inventory file
                     sh '''
                         ansible-playbook -i inventory playbook.yml \
                         --private-key ~/.ssh/eks-terraform-key.pem
@@ -44,8 +44,7 @@ pipeline {
 
     post {
         always {
-            // Tasks that should always run after pipeline execution
-            echo 'Pipeline completed. Performing cleanup if necessary.'
+            // Cleanup or notification logic if needed
         }
     }
 }

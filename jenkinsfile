@@ -44,7 +44,9 @@ pipeline {
 
     post {
         always {
-            // Cleanup or notification logic if needed
+            // Add a simple message or cleanup command
+            echo 'Pipeline completed. Performing cleanup if necessary.'
+            // Additional cleanup steps can be added here
         }
     }
 }
